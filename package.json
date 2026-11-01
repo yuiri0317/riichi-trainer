@@ -1,0 +1,77 @@
+{
+    "name": "mahjong-master",
+    "version": "0.1.0",
+    "private": true,
+    "description": "立直麻將練習工具（離線桌面版）",
+    "author": "richi",
+    "main": "electron/main.js",
+    "dependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "react-router-dom": "^7.1.5",
+        "react-scripts": "5.0.1",
+        "web-vitals": "^4.2.4"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject",
+        "electron": "electron .",
+        "dist:win": "npm run build && electron-builder --win nsis",
+        "dist:portable": "npm run build && electron-builder --win portable"
+    },
+    "build": {
+        "appId": "com.richi.trainer",
+        "productName": "立直麻將練習",
+        "asar": true,
+        "files": [
+            "electron/**/*",
+            "build/**/*"
+        ],
+        "extraMetadata": {
+            "main": "electron/main.js"
+        },
+        "directories": {
+            "output": "dist"
+        },
+        "win": {
+            "target": [
+                "nsis"
+            ],
+            "icon": "public/logo512.png",
+            "signAndEditExecutable": false
+        },
+        "nsis": {
+            "oneClick": false,
+            "perMachine": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "立直麻將練習"
+        }
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+        "electron": "^33.0.0",
+        "electron-builder": "^25.0.0"
+    }
+}

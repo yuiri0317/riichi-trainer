@@ -1,0 +1,31 @@
+{
+    "short_name": "麻將練習",
+    "name": "立直麻將練習網站",
+    "description": "立直麻將的進張、牌效率、符數、點數練習工具",
+    "lang": "zh-Hant",
+    "start_url": ".",
+    "scope": ".",
+    "display": "standalone",
+    "orientation": "portrait",
+    "theme_color": "#007BFF",
+    "background_color": "#ffffff",
+    "icons": [
+        {
+            "src": "favicon.ico",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "logo192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "logo512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "any maskable"
+        }
+    ]
+}
