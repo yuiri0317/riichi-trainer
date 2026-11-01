@@ -2,6 +2,17 @@
 
 日麻（立直麻將）的離線練習工具。純前端，所有計算都在瀏覽器裡完成，不需要後端、不需要連網。
 
+> **聲明**
+>
+> 這是一個**個人學習用途的非商業專案**，與任何麻將遊戲廠商、開源專案作者均無隸屬或背書關係。
+>
+> - 介面結構與牌面圖片改作自 [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)，該專案未附授權條款；本專案保留出處標註，若原作者認為不妥，請[開 issue](https://github.com/yuiri0317/riichi-trainer/issues) 告知，會立即下架相關內容
+> - 本專案**不收取任何費用**、無廣告、無商業行為
+> - 軟體按「現狀」提供，不對任何計算結果的正確性作擔保；用於實戰前請自行核對
+> - 「立直」「麻雀」「Riichi Mahjong」等為通用名詞，相關商標權利歸各自所有者
+>
+> 詳細的授權範圍見文末[授權與來源](#授權與來源)。
+
 ## 功能
 
 | 頁面 | 說明 |
@@ -90,4 +101,35 @@ npm run build      # 產出 build/
 
 `public/images/` 內的牌面圖非本專案原創。若需要可安全再分發的替代方案，
 可改用公有領域素材，例如 [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles)（CC0，可商用）。
+
+### 致謝
+
+- [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)：本專案的起點，介面與牌面圖片皆源於此
+- [tomohxx/shanten-number](https://github.com/tomohxx)：進張數與向聽數演算法的原始出處
+- [Create React App](https://create-react-app.dev/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)：建置與打包工具鏈
+
+### 免責聲明
+
+```text
+本軟體為個人學習作品，按「現狀」（AS IS）提供，不附帶任何明示或暗示的擔保，
+包括但不限於適售性、特定用途適用性及不侵權之擔保。
+
+在任何情況下，作者均不對因使用或無法使用本軟體而產生之任何直接、間接、
+偶然、特殊或衍生性損害負責，包括但不限於資料損失、點數計算錯誤、
+對局判斷失誤或其他經濟損失。
+
+本軟體非商業產品，不收費、無廣告、不收集個人資料（完全離線運行，
+所有計算皆在使用者瀏覽器或本機完成，不會上傳任何資料）。
+```
+
+### 權利主張與下架
+
+本專案**無意侵犯任何人的權利**。若你是上游專案作者、牌面素材權利人，
+或認為本專案內容侵害你的權益：
+
+1. [開一個 issue](https://github.com/yuiri0317/riichi-trainer/issues) 說明具體內容
+2. 或透過 GitHub 個人頁面聯絡我
+
+我會在確認後**立即移除相關內容或整個專案**，不要求任何證明文件、不拖延。
+
 
