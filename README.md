@@ -60,7 +60,34 @@ npm run build      # 產出 build/
 `public/sw.js` + `public/manifest.json` 已就緒。部署到 HTTPS 後，手機瀏覽器可以「加到主畫面」，
 裝完有圖示、全屏執行、斷網可用。Service Worker 只在 production 建置註冊，`npm start` 不受影響。
 
-## 授權
+## 授權與來源
 
-本專案的介面與牌面圖片改作自 [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)，
-原專案未附授權條款。若要公開分發，請先確認圖片與原始碼的使用權。
+### 本專案自行撰寫的部分
+
+以下程式碼由本專案獨立完成，採用 [MIT 授權](https://opensource.org/licenses/MIT)，可自由使用、修改、再分發（保留著作權聲明即可）：
+
+| 範圍 | 內容 |
+|---|---|
+| `src/tools/Score.js`、`src/tools/meldParser.js` | 算點引擎、副露解析（含 27 個回歸測試） |
+| `src/pages/HandScoreCalculator.js` | 手牌算點頁面 |
+| `src/i18n/` | 繁簡轉換 |
+| `electron/`、`public/sw.js`、`public/manifest.json` | 桌面版封裝、PWA |
+| `scripts/`、`.github/workflows/` | 打包與部署腳本 |
+| 各頁面新增的功能 | 自動理牌開關、反悔與計數、切牌前回顯、副露輸入、寶牌指示牌等 |
+
+### 沿用自上游的部分
+
+介面結構、牌效率演算法與 `public/images/` 內的牌面圖片，
+改作自 [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)。
+**該專案未附授權條款**，因此這部分沒有明確的使用許可。
+
+若你要複製、修改或再分發本專案，請注意：
+
+- 上述 MIT 授權**只涵蓋本專案自行撰寫的部分**
+- 上游部分請自行判斷風險；商用或大規模再分發前，建議先取得原作者同意，或全部重寫
+
+### 牌面圖片
+
+`public/images/` 內的牌面圖非本專案原創。若需要可安全再分發的替代方案，
+可改用公有領域素材，例如 [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles)（CC0，可商用）。
+
