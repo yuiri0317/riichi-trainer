@@ -1,61 +1,63 @@
-# 立直麻將練習
+# 立直麻将练习
 
-日麻（立直麻將）的離線練習工具。純前端，所有計算都在瀏覽器裡完成，不需要後端、不需要連網。
+日麻（立直麻将）的离线练习工具。纯前端，所有计算都在浏览器里完成，不需要后端、不需要联网。
 
-> **聲明**
+> **声明**
 >
-> 這是一個**個人學習用途的非商業專案**，與任何麻將遊戲廠商、開源專案作者均無隸屬或背書關係。
+> 这是一个**个人学习用途的非商业项目**，与任何麻将游戏厂商、开源项目作者均无隶属或背书关系。
 >
-> - 介面結構與牌面圖片改作自 [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)，該專案未附授權條款；本專案保留出處標註，若原作者認為不妥，請[開 issue](https://github.com/yuiri0317/riichi-trainer/issues) 告知，會立即下架相關內容
-> - 本專案**不收取任何費用**、無廣告、無商業行為
-> - 軟體按「現狀」提供，不對任何計算結果的正確性作擔保；用於實戰前請自行核對
-> - 「立直」「麻雀」「Riichi Mahjong」等為通用名詞，相關商標權利歸各自所有者
+> - 界面结构与牌面图片改作自 [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)，该项目未附授权条款；本项目保留出处标注，若原作者认为不妥，请[开 issue](https://github.com/yuiri0317/riichi-trainer/issues) 告知，会立即下架相关内容
+> - 本项目**不收取任何费用**、无广告、无商业行为
+> - 软件按「现状」提供，不对任何计算结果的正确性作担保；用于实战前请自行核对
+> - 「立直」「麻雀」「Riichi Mahjong」等为通用名词，相关商标权利归各自所有者
 >
-> 詳細的授權範圍見文末[授權與來源](#授權與來源)。
+> 详细的授权范围见文末[授权与来源](#授权与来源)。
 
 ## 功能
 
-| 頁面 | 說明 |
+| 页面 | 说明 |
 |---|---|
-| 進張數計算 | 輸入手牌，算出切哪張進張最多 |
-| 牌效率何切 | 隨機出題的切牌練習（自動理牌可開關、支援反悔、顯示切牌前手牌） |
-| 清一色何切 / 清一色聽牌 | 清一色專項練習 |
-| 點數計算 | 飜＋符 → 點數（含青天井規則） |
-| 符數計算 | 隨機牌型的符數練習 |
-| **手牌算點** | 輸入完整手牌自動判定役種、飜數、符數、點數 |
+| 进张数计算 | 输入手牌，算出切哪张进张最多 |
+| 牌效率何切 | 随机出题的切牌练习（自动理牌可开关、支持反悔、显示切牌前手牌） |
+| 清一色何切 / 清一色听牌 | 清一色专项练习 |
+| 点数计算 | 番＋符 → 点数（含青天井规则） |
+| 符数计算 | 随机牌型的符数练习 |
+| **手牌算点** | 输入完整手牌自动判定役种、番数、符数、点数 |
 
-手牌算點支援：
+手牌算点支持：
 
-- 門前 14 張，或帶副露（吃／碰／明槓／暗槓）
-- 副露語法：`123m`＝吃、`111p`＝碰、`1111s`＝明槓、`1111s-`＝暗槓；`123123123m` 會切成三個順子，不會被重排成 `111222333`
-- 自摸／榮和、親家／子家、立直／雙立直／一發、天和／地和、海底／河底、嶺上開花、搶槓
-- 寶牌：手填張數，或點選指示牌自動換算（含赤寶牌）
-- 可展開符數明細，看到每一項加符與進位過程
+- 门前 14 张，或带副露（吃／碰／明杠／暗杠）
+- 副露语法：`123m`＝吃、`111p`＝碰、`1111s`＝明杠、`1111s-`＝暗杠；`123123123m` 会切成三个顺子，不会被重排成 `111222333`
+- 自摸／荣和、亲家／子家、立直／双立直／一发、天和／地和、海底／河底、岭上开花、抢杠
+- 宝牌：手填张数，或点选指示牌自动换算（含赤宝牌）
+- 赤宝牌 `0m` / `0p` / `0s` 可直接在牌堆里点选，与普通 `5` 共用 4 张上限
+- 可展开符数明细，看到每一项加符与进位过程
+- 「清空」一键重置手牌、副露与宝牌
 
-## 開發
+## 开发
 
 ```bash
 npm install
 npm start          # http://localhost:3000
 ```
 
-## 測試
+## 测试
 
-算點引擎與副露解析有回歸測試（27 個）：
+算点引擎与副露解析有回归测试（27 个）：
 
 ```bash
 npm test -- --watchAll=false --runInBand
 ```
 
-`--runInBand` 是必要的，否則 jest 會 fork 子程序，在部分受限環境會 `spawn EPERM`。
+`--runInBand` 是必要的，否则 jest 会 fork 子进程，在部分受限环境会 `spawn EPERM`。
 
-## 建置
+## 构建
 
 ```bash
-npm run build      # 產出 build/
+npm run build      # 产出 build/
 ```
 
-`build/` 是純靜態檔案，可以直接丟到任何靜態主機（GitHub Pages / Netlify / Cloudflare Pages）。
+`build/` 是纯静态文件，可以直接丢到任何静态主机（GitHub Pages / Netlify / Cloudflare Pages）。
 
 ## 桌面版（Windows）
 
@@ -63,73 +65,73 @@ npm run build      # 產出 build/
 .\scripts\build-desktop.ps1
 ```
 
-會依序安裝依賴、建置前端、用 electron-builder 打包出 NSIS 安裝檔（`dist\立直麻將練習 Setup 0.1.0.exe`）。
-所有下載都會落在專案目錄下的 `.npm-cache` / `.cache`，不污染系統槽。
+会依次安装依赖、构建前端、用 electron-builder 打包出 NSIS 安装档（`dist\立直麻将练习 Setup 0.1.0.exe`）。
+所有下载都会落在项目目录下的 `.npm-cache` / `.cache`，不污染系统盘。
+
+也提供免安装版：整个 `dist\win-unpacked\` 目录可以压缩分发，解压后双击 exe 即可运行（需保留完整目录）。
 
 ## PWA
 
-`public/sw.js` + `public/manifest.json` 已就緒。部署到 HTTPS 後，手機瀏覽器可以「加到主畫面」，
-裝完有圖示、全屏執行、斷網可用。Service Worker 只在 production 建置註冊，`npm start` 不受影響。
+`public/sw.js` + `public/manifest.json` 已就绪。部署到 HTTPS 后，手机浏览器可以「加到主画面」，
+装完有图标、全屏执行、断网可用。Service Worker 只在 production 构建注册，`npm start` 不受影响。
 
-## 授權與來源
+## 授权与来源
 
-### 本專案自行撰寫的部分
+### 本项目自行撰写的部分
 
-以下程式碼由本專案獨立完成，採用 [MIT 授權](https://opensource.org/licenses/MIT)，可自由使用、修改、再分發（保留著作權聲明即可）：
+以下代码由本项目独立完成，采用 [MIT 授权](https://opensource.org/licenses/MIT)，可自由使用、修改、再分发（保留著作权声明即可）：
 
-| 範圍 | 內容 |
+| 范围 | 内容 |
 |---|---|
-| `src/tools/Score.js`、`src/tools/meldParser.js` | 算點引擎、副露解析（含 27 個回歸測試） |
-| `src/pages/HandScoreCalculator.js` | 手牌算點頁面 |
-| `src/i18n/` | 繁簡轉換 |
-| `electron/`、`public/sw.js`、`public/manifest.json` | 桌面版封裝、PWA |
-| `scripts/`、`.github/workflows/` | 打包與部署腳本 |
-| 各頁面新增的功能 | 自動理牌開關、反悔與計數、切牌前回顯、副露輸入、寶牌指示牌等 |
+| `src/tools/Score.js`、`src/tools/meldParser.js` | 算点引擎、副露解析（含 27 个回归测试） |
+| `src/pages/HandScoreCalculator.js` | 手牌算点页面 |
+| `src/i18n/` | 繁简转换 |
+| `electron/`、`public/sw.js`、`public/manifest.json` | 桌面版封装、PWA |
+| `scripts/`、`.github/workflows/` | 打包与部署脚本 |
+| 各页面新增的功能 | 自动理牌开关、反悔与计数、切牌前回显、副露输入、宝牌指示牌等 |
 
 ### 沿用自上游的部分
 
-介面結構、牌效率演算法與 `public/images/` 內的牌面圖片，
+界面结构、牌效率算法与 `public/images/` 内的牌面图片，
 改作自 [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)。
-**該專案未附授權條款**，因此這部分沒有明確的使用許可。
+**该项目未附授权条款**，因此这部分没有明确的使用许可。
 
-若你要複製、修改或再分發本專案，請注意：
+若你要复制、修改或再分发本项目，请注意：
 
-- 上述 MIT 授權**只涵蓋本專案自行撰寫的部分**
-- 上游部分請自行判斷風險；商用或大規模再分發前，建議先取得原作者同意，或全部重寫
+- 上述 MIT 授权**只涵盖本项目自行撰写的部分**
+- 上游部分请自行判断风险；商用或大规模再分发前，建议先取得原作者同意，或全部重写
 
-### 牌面圖片
+### 牌面图片
 
-`public/images/` 內的牌面圖非本專案原創。若需要可安全再分發的替代方案，
-可改用公有領域素材，例如 [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles)（CC0，可商用）。
+`public/images/` 内的牌面图非本项目原创。若需要可安全再分发的替代方案，
+可改用公有领域素材，例如 [FluffyStuff/riichi-mahjong-tiles](https://github.com/FluffyStuff/riichi-mahjong-tiles)（CC0，可商用）。
 
-### 致謝
+### 致谢
 
-- [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)：本專案的起點，介面與牌面圖片皆源於此
-- [tomohxx/shanten-number](https://github.com/tomohxx)：進張數與向聽數演算法的原始出處
-- [Create React App](https://create-react-app.dev/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)：建置與打包工具鏈
+- [riichimahjongtrainer](https://github.com/riichimahjongtrainer/riichimahjongtrainer)：本项目的起点，界面与牌面图片皆源于此
+- [tomohxx/shanten-number](https://github.com/tomohxx)：进张数与向听数算法的原始出处
+- [Create React App](https://create-react-app.dev/)、[Electron](https://www.electronjs.org/)、[electron-builder](https://www.electron.build/)：构建与打包工具链
 
-### 免責聲明
+### 免责声明
 
 ```text
-本軟體為個人學習作品，按「現狀」（AS IS）提供，不附帶任何明示或暗示的擔保，
-包括但不限於適售性、特定用途適用性及不侵權之擔保。
+本软件为个人学习作品，按「现状」（AS IS）提供，不附带任何明示或暗示的担保，
+包括但不限于适销性、特定用途适用性及不侵权之担保。
 
-在任何情況下，作者均不對因使用或無法使用本軟體而產生之任何直接、間接、
-偶然、特殊或衍生性損害負責，包括但不限於資料損失、點數計算錯誤、
-對局判斷失誤或其他經濟損失。
+在任何情况下，作者均不对因使用或无法使用本软件而产生之任何直接、间接、
+偶然、特殊或衍生性损害负责，包括但不限于数据丢失、点数计算错误、
+对局判断失误或其他经济损失。
 
-本軟體非商業產品，不收費、無廣告、不收集個人資料（完全離線運行，
-所有計算皆在使用者瀏覽器或本機完成，不會上傳任何資料）。
+本软件非商业产品，不收费、无广告、不收集个人数据（完全离线运行，
+所有计算皆在用户浏览器或本机完成，不会上传任何数据）。
 ```
 
-### 權利主張與下架
+### 权利主张与下架
 
-本專案**無意侵犯任何人的權利**。若你是上游專案作者、牌面素材權利人，
-或認為本專案內容侵害你的權益：
+本项目**无意侵犯任何人的权利**。若你是上游项目作者、牌面素材权利人，
+或认为本项目内容侵害你的权益：
 
-1. [開一個 issue](https://github.com/yuiri0317/riichi-trainer/issues) 說明具體內容
-2. 或透過 GitHub 個人頁面聯絡我
+1. [开一个 issue](https://github.com/yuiri0317/riichi-trainer/issues) 说明具体内容
+2. 或通过 GitHub 个人页面联系我
 
-我會在確認後**立即移除相關內容或整個專案**，不要求任何證明文件、不拖延。
-
-
+我会在确认后**立即移除相关内容或整个项目**，不要求任何证明文件、不拖延。
