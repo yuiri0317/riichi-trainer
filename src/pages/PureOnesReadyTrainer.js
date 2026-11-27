@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import CircleTimer from "../components/CircleTimer";
+import { loadSettings } from "../tools/settings";
 
 // 生成僅包含萬子的牌山
 const generateTiles = (type) => {
@@ -80,6 +81,19 @@ const convertToTilesStr = (handTiles) => {
 };
 
 function PureOnesReadyTrainer() {
+    // 牌面大小：清一色何切與清一色聽牌共用同一個設定
+    const [tileSize, setTileSize] = useState(() => loadSettings().pureOnesTileSize);
+
+    useEffect(() => {
+        const sync = () => setTileSize(loadSettings().pureOnesTileSize);
+        window.addEventListener("storage", sync);
+        window.addEventListener("focus", sync);
+        return () => {
+            window.removeEventListener("storage", sync);
+            window.removeEventListener("focus", sync);
+        };
+    }, []);
+
     const [tileType, setTileType] = useState("m");
 
     const [difficulty, setDifficulty] = useState(0);
@@ -342,8 +356,8 @@ function PureOnesReadyTrainer() {
                             src={`${process.env.PUBLIC_URL}/images/${tile}.png`}
                             alt={tile}
                             style={{
-                                width: "7.5%",
-                                maxWidth: "50px",
+                                width: `${tileSize}px`,
+                                maxWidth: `${tileSize}px`,
                                 height: "auto",
                                 borderRadius: "5px",
                             }}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { scoreHand } from "../tools/Score";
 import { parseMelds, meldTileNames, MELD_LABEL, buildMeldCode, meldToCode } from "../tools/meldParser";
+import { loadSettings, tileWidth } from "../tools/settings";
 
 const ALL_TILES = (() => {
     const list = [];
@@ -71,9 +72,27 @@ const WINDS = ["東", "南", "西", "北"];
 
 // 牌面尺寸：點選面板與手牌共用同一個值，確保兩者一樣大
 // 窄螢幕會縮到 24px（14 張仍能擠在一行），寬螢幕放大到 38px
-const TILE_SIZE = "clamp(24px, 6.2vw, 38px)";
-
 const HandScoreCalculator = () => {
+    // 牌面尺寸：響應式就沿用 clamp()，否則用設定頁的固定 px
+    const [tileSettings, setTileSettings] = useState(() => {
+        const s = loadSettings();
+        return { size: s.handScoreTileSize, responsive: s.handScoreResponsive };
+    });
+    const TILE_SIZE = tileWidth(tileSettings.size, tileSettings.responsive);
+
+    useEffect(() => {
+        const sync = () => {
+            const s = loadSettings();
+            setTileSettings({ size: s.handScoreTileSize, responsive: s.handScoreResponsive });
+        };
+        window.addEventListener("storage", sync);
+        window.addEventListener("focus", sync);
+        return () => {
+            window.removeEventListener("storage", sync);
+            window.removeEventListener("focus", sync);
+        };
+    }, []);
+
     const [mode, setMode] = useState("text"); // text | pick
     const [tiles, setTiles] = useState([]);
     const [input, setInput] = useState("");
@@ -297,10 +316,24 @@ const HandScoreCalculator = () => {
     }, [tiles, winIndex, isTsumo, isDealer, roundWind, seatWind, riichi, doubleRiichi, ippatsu, haitei, rinshan, chankan, tenchi, doraValue, meldInput]);
 
     const checkbox = (label, checked, onChange) => (
-        <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "16px" }}>
-            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-            {label}
-        </label>
+        <button
+            type="button"
+            onClick={() => onChange(!checked)}
+            title={checked ? "點一下關閉" : "點一下開啟"}
+            style={{
+                padding: "5px 14px",
+                fontSize: "15px",
+                fontWeight: "bold",
+                backgroundColor: checked ? "#007BFF" : "#777777",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+            }}
+        >
+            {label}：{checked ? "開" : "關"}
+        </button>
     );
 
     const select = (value, onChange, options) => (

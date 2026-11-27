@@ -10,6 +10,7 @@ const pageLinks = [
     { path: "/aotenjiuu-calculate-trainer", title: "青天井計算", description: "青天井規則的得點計算" },
     { path: "/fu-calculate-trainer", title: "符數計算", description: "根據和牌牌型計算符數" },
     { path: "/hand-score", title: "手牌算點", description: "輸入手牌自動計算飜數與點數" },
+    { path: "/memory-trainer", title: "記憶訓練", description: "記住手牌後憑記憶點回來" },
 ];
 
 const MainPage = () => {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { loadSettings } from "../tools/settings";
 
 const generateTiles = (type) => {
     const tiles = [];
@@ -133,6 +134,19 @@ const countRemainingTiles = (tilesWall) => {
 };
 
 function PureOnesEfficiencyTrainer() {
+    // 牌面大小：清一色何切與清一色聽牌共用同一個設定
+    const [tileSize, setTileSize] = useState(() => loadSettings().pureOnesTileSize);
+
+    useEffect(() => {
+        const sync = () => setTileSize(loadSettings().pureOnesTileSize);
+        window.addEventListener("storage", sync);
+        window.addEventListener("focus", sync);
+        return () => {
+            window.removeEventListener("storage", sync);
+            window.removeEventListener("focus", sync);
+        };
+    }, []);
+
     const [tilesWall, setTilesWall] = useState([]);
     const [handTiles, setHandTiles] = useState([]);
     const [discardedTiles, setDiscardedTiles] = useState([]);
@@ -597,8 +611,8 @@ function PureOnesEfficiencyTrainer() {
                         onMouseLeave={() => handleTileHover(null)}
                         style={{
                             cursor: "pointer",
-                            width: "7%",
-                            maxWidth: "50px",
+                            width: `${tileSize}px`,
+                            maxWidth: `${tileSize}px`,
                             height: "auto",
                             borderRadius: "5px",
                             transition: "all 0.2s ease",

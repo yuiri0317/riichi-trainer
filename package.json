@@ -1,11 +1,12 @@
 {
     "name": "mahjong-master",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "private": true,
     "description": "立直麻將練習工具（離線桌面版）",
     "author": "richi",
     "main": "electron/main.js",
     "dependencies": {
+        "@capacitor/core": "^7.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-router-dom": "^7.1.5",
@@ -19,7 +20,9 @@
         "eject": "react-scripts eject",
         "electron": "electron .",
         "dist:win": "npm run build && electron-builder --win nsis",
-        "dist:portable": "npm run build && electron-builder --win portable"
+        "dist:portable": "npm run build && electron-builder --win portable",
+        "android:sync": "npx cap sync android",
+        "android:open": "npx cap open android"
     },
     "build": {
         "appId": "com.richi.trainer",
@@ -71,6 +74,8 @@
     },
     "devDependencies": {
         "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+        "@capacitor/android": "^7.0.0",
+        "@capacitor/cli": "^7.0.0",
         "electron": "^33.0.0",
         "electron-builder": "^25.0.0"
     }

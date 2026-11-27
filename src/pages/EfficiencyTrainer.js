@@ -1,4 +1,55 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { loadSettings } from "../tools/settings";
+
+// 下方點選盤：全部牌種（含赤寶），依花色分列
+const PALETTE_TILES = {
+    m: ["1m", "2m", "3m", "4m", "5m", "0m", "6m", "7m", "8m", "9m"],
+    p: ["1p", "2p", "3p", "4p", "5p", "0p", "6p", "7p", "8p", "9p"],
+    s: ["1s", "2s", "3s", "4s", "5s", "0s", "6s", "7s", "8s", "9s"],
+    z: ["1z", "2z", "3z", "4z", "5z", "6z", "7z"],
+};
+
+const TILE_BACK = "0z";
+
+// 把牌碼轉成中文名稱，錯誤提示用（例：3m → 三萬、0p → 赤五筒、1z → 東）
+const SUIT_NAMES = { m: "萬", p: "筒", s: "索" };
+const HONOR_NAMES = { 1: "東", 2: "南", 3: "西", 4: "北", 5: "白", 6: "發", 7: "中" };
+const NUM_NAMES = { 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六", 7: "七", 8: "八", 9: "九" };
+
+const tileName = (tile) => {
+    const suit = tile.slice(-1);
+    const num = tile.replace(/\D/g, "");
+    if (suit === "z") return HONOR_NAMES[num] || tile;
+    if (num === "0") return `赤五${SUIT_NAMES[suit]}`;
+    return `${NUM_NAMES[num] || num}${SUIT_NAMES[suit]}`;
+};
+
+// 開關按鈕：開＝藍底，關＝灰底（和自動理牌、記憶訓練一致）
+// fontSize 由「設定」頁控制，預設 20px
+const toggleStyle = (on, size = 20) => ({
+    padding: "7px 15px",
+    fontSize: `${size}px`,
+    fontWeight: "bold",
+    backgroundColor: on ? "#007BFF" : "#777777",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+});
+
+// 操作按鈕（新的手牌 / 反悔）底色不同，但字級跟「各種按鈕大小」共用
+const actionButtonStyle = (size, backgroundColor, disabled = false) => ({
+    padding: "7px 15px",
+    fontSize: `${size}px`,
+    fontWeight: "bold",
+    backgroundColor,
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    cursor: disabled ? "not-allowed" : "pointer",
+    transition: "all 0.3s ease",
+});
 
 // 生成初始牌山
 const generateTiles = () => {
@@ -35,24 +86,23 @@ const shuffleArray = (array) => {
 };
 
 // 排序函數
-const sortTiles = (tiles) => {
+const compareTiles = (a, b) => {
     const typeOrder = { m: 0, p: 1, s: 2, z: 3 };
+    const aType = a.slice(-1);
+    const aNum = a.replace(/\D/g, "");
+    const aSortNum = aNum === "0" ? 5.5 : parseInt(aNum, 10);
 
-    return [...tiles].sort((a, b) => {
-        const aType = a.slice(-1);
-        const aNum = a.replace(/\D/g, "");
-        const aSortNum = aNum === "0" ? 5.5 : parseInt(aNum, 10);
+    const bType = b.slice(-1);
+    const bNum = b.replace(/\D/g, "");
+    const bSortNum = bNum === "0" ? 5.5 : parseInt(bNum, 10);
 
-        const bType = b.slice(-1);
-        const bNum = b.replace(/\D/g, "");
-        const bSortNum = bNum === "0" ? 5.5 : parseInt(bNum, 10);
-
-        if (typeOrder[aType] !== typeOrder[bType]) {
-            return typeOrder[aType] - typeOrder[bType];
-        }
-        return aSortNum - bSortNum;
-    });
+    if (typeOrder[aType] !== typeOrder[bType]) {
+        return typeOrder[aType] - typeOrder[bType];
+    }
+    return aSortNum - bSortNum;
 };
+
+const sortTiles = (tiles) => [...tiles].sort(compareTiles);
 
 // 將手牌轉換為 tilesStr 格式（合併相同種類的牌）
 const convertToTilesStr = (handTiles) => {
@@ -153,11 +203,37 @@ function EfficiencyTrainer() {
     const [isCalculatedList, setIsCalculatingList] = useState(false);
     const [isTileWall, setIsTileWall] = useState(false);
     const [autoSort, setAutoSort] = useState(true); // 是否自動理牌
+    const [previousAutoSort, setPreviousAutoSort] = useState(true); // 切牌前手牌是否自動理牌（獨立開關）
     const [previousHand, setPreviousHand] = useState([]); // 切牌前的手牌
     const [lastDiscardIndex, setLastDiscardIndex] = useState(null); // 切掉的是第幾張
     const [history, setHistory] = useState([]); // 每次切牌前的狀態快照，供「反悔」使用
     const [undoCount, setUndoCount] = useState(0); // 本局已反悔次數
     const [showPreviousHand, setShowPreviousHand] = useState(true); // 是否顯示切牌前的手牌
+    const [coverHand, setCoverHand] = useState(false); // 蓋牌：手牌只顯示牌背，只有剛摸的牌顯示牌面
+    const [coverErrorCount, setCoverErrorCount] = useState(0); // 蓋牌模式點錯（手牌裡沒有）的次數
+    const [toast, setToast] = useState(null); // 錯誤提示
+    const toastTimer = useRef(null);
+
+    // 牌面尺寸：讀「設定」頁的值（預設 38px，和手牌算點一樣大）
+    const [tileSizes, setTileSizes] = useState(loadSettings);
+
+    // 從設定頁回來、或另一個分頁改了設定時，跟著更新
+    // （storage 事件涵蓋其他分頁；focus 涵蓋切回這個視窗）
+    useEffect(() => {
+        const sync = () => setTileSizes(loadSettings());
+        window.addEventListener("storage", sync);
+        window.addEventListener("focus", sync);
+        return () => {
+            window.removeEventListener("storage", sync);
+            window.removeEventListener("focus", sync);
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (toastTimer.current) clearTimeout(toastTimer.current);
+        };
+    }, []);
 
     useEffect(() => {
         initializeGame();
@@ -545,6 +621,9 @@ function EfficiencyTrainer() {
         setLastDiscardIndex(null);
         setHistory([]);
         setUndoCount(0);
+        setCoverErrorCount(0);
+        setToast(null);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
 
         updateTilesState(newHandTiles);
         calculateImprovements(newHandTiles, allTiles);
@@ -558,6 +637,46 @@ function EfficiencyTrainer() {
         if (next && handTiles.length === 14) {
             setHandTiles([...sortTiles(handTiles.slice(0, 13)), handTiles[13]]);
         }
+    };
+
+    // 顯示錯誤提示，幾秒後自動消失
+    const showToast = (text) => {
+        setToast(text);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setToast(null), 3000);
+    };
+
+    // 蓋牌模式：開啟時自動關閉自動理牌
+    const toggleCoverHand = () => {
+        const next = !coverHand;
+        setCoverHand(next);
+        if (next && autoSort) setAutoSort(false);
+    };
+
+    // 從下方完整牌種點選切牌；手牌裡沒有這張就記一次錯誤
+    // 赤寶（0m/0p/0s）先找同名赤寶，沒有再退回一般 5（5m/5p/5s）
+    const handlePaletteDiscard = (tile) => {
+        let index = handTiles.indexOf(tile);
+        let matchedTile = tile;
+
+        if (index < 0 && /^0[mps]$/.test(tile)) {
+            const five = `5${tile.slice(-1)}`;
+            const fiveIndex = handTiles.indexOf(five);
+            if (fiveIndex >= 0) {
+                index = fiveIndex;
+                matchedTile = five;
+            }
+        }
+
+        if (index < 0) {
+            setCoverErrorCount((count) => count + 1);
+            showToast(`手牌裡沒有 ${tileName(tile)}，記一次錯誤`);
+            return;
+        }
+
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast(null);
+        handleTileClick(matchedTile, index);
     };
 
     // 反悔：回到上一次切牌前的完整狀態（可連續回退）
@@ -583,8 +702,35 @@ function EfficiencyTrainer() {
         setHoveredIndex(null);
     };
 
+    // 切牌前的顯示順序：獨立控制是否自動理牌，紅框仍跟著被切掉的那張
+    const previousRows = (() => {
+        const rows = previousHand.map((tile, index) => ({ tile, index }));
+        return previousAutoSort ? rows.sort((a, b) => compareTiles(a.tile, b.tile)) : rows;
+    })();
+
     return (
         <div className="container" style={{ maxWidth: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            {toast && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: "20px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        zIndex: 1000,
+                        padding: "12px 22px",
+                        borderRadius: "10px",
+                        backgroundColor: "#dc3545",
+                        color: "white",
+                        fontSize: "18px",
+                        fontWeight: "bold",
+                        boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {toast}
+                </div>
+            )}
             <div style={{ fontSize: "clamp(28px, 2vw, 32px)", fontWeight: "bold" }}>牌效率何切練習</div>
 
             {shantenNum !== null && (
@@ -646,29 +792,66 @@ function EfficiencyTrainer() {
             )}
 
             <div className="hand-tiles" style={{ display: "flex", flexWrap: "wrap", gap: "0px", marginTop: "10px" }}>
-                {handTiles.map((tile, index) => (
-                    <img
-                        key={`${tile}-${index}`}
-                        src={`${process.env.PUBLIC_URL}/images/${tile}.png`}
-                        alt={tile}
-                        onClick={() => handleTileClick(tile, index)}
-                        onMouseEnter={() => handleTileHover(index)}
-                        onMouseLeave={() => handleTileHover(null)}
-                        style={{
-                            cursor: "pointer",
-                            width: "7%",
-                            maxWidth: "50px",
-                            height: "auto",
-                            borderRadius: "5px",
-                            transition: "all 0.2s ease",
-                            transform: hoveredIndex === index ? "translateY(-5px)" : "none",
-                            marginLeft: index === 13 ? "5px" : "0px", // 第 14 張（索引 13）前加入間隔
-                        }}
-                    />
-                ))}
+                {handTiles.map((tile, index) => {
+                    // 蓋牌時只有剛摸的那張（最後一張）顯示牌面
+                    const isDrawn = index === 13 && handTiles.length === 14;
+                    const faceDown = coverHand && !isDrawn;
+                    return (
+                        <img
+                            key={`${tile}-${index}`}
+                            src={`${process.env.PUBLIC_URL}/images/${faceDown ? TILE_BACK : tile}.png`}
+                            alt={faceDown ? "牌背" : tile}
+                            // 蓋牌時也可以直接點上面的牌背切牌（位置就是那張牌）
+                            onClick={() => handleTileClick(tile, index)}
+                            onMouseEnter={() => handleTileHover(index)}
+                            onMouseLeave={() => handleTileHover(null)}
+                            title={faceDown ? "點這張牌背切掉它（也可以從下方牌組選）" : undefined}
+                            style={{
+                                cursor: "pointer",
+                                width: `${tileSizes.handTileSize}px`,
+                                maxWidth: `${tileSizes.handTileSize}px`,
+                                height: "auto",
+                                borderRadius: "5px",
+                                transition: "all 0.2s ease",
+                                transform: hoveredIndex === index ? "translateY(-5px)" : "none",
+                                marginLeft: index === 13 ? "5px" : "0px", // 第 14 張（索引 13）前加入間隔
+                            }}
+                        />
+                    );
+                })}
             </div>
 
-            <div style={{ fontSize: "20px", marginTop: "5px" }}>手牌：{tilesStr}</div>
+            <div style={{ fontSize: "20px", marginTop: "5px" }}>{coverHand ? "手牌：已蓋牌" : `手牌：${tilesStr}`}</div>
+
+            {coverHand && (
+                <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "1px", alignItems: "center" }}>
+                    <div style={{ fontSize: "16px", color: "#666666", marginBottom: "6px" }}>
+                        點上面的牌背或下面的牌都可以切牌；手牌裡沒有這張會記一次錯誤
+                    </div>
+                    {["m", "p", "s", "z"].map((suit) => (
+                        <div key={suit} style={{ display: "flex", gap: "0px", justifyContent: "center", flexWrap: "wrap" }}>
+                            {PALETTE_TILES[suit].map((tile) => (
+                                <img
+                                    key={tile}
+                                    src={`${process.env.PUBLIC_URL}/images/${tile}.png`}
+                                    alt={tile}
+                                    onClick={() => handlePaletteDiscard(tile)}
+                                    style={{
+                                        width: `${tileSizes.paletteTileSize}px`,
+                                        maxWidth: `${tileSizes.paletteTileSize}px`,
+                                        height: "auto",
+                                        cursor: "pointer",
+                                        borderRadius: "5px",
+                                        boxSizing: "border-box",
+                                        border: "2px solid transparent",
+                                        transition: "transform 0.15s ease",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {showPreviousHand && previousHand.length > 0 && (
                 <div
@@ -683,18 +866,19 @@ function EfficiencyTrainer() {
                     }}
                 >
                     <span style={{ fontSize: "18px", fontWeight: "bold", color: "#666666", marginRight: "8px" }}>切牌前：</span>
-                    {previousHand.map((tile, i) => (
+                    {previousRows.map(({ tile, index }) => (
                         <img
-                            key={`prev-${tile}-${i}`}
-                            src={`${process.env.PUBLIC_URL}/images/${tile}.png`}
-                            alt={tile}
+                            key={`prev-${tile}-${index}`}
+                            // 蓋牌模式下「切牌前」也只顯示牌背，否則會把答案漏出來
+                            src={`${process.env.PUBLIC_URL}/images/${coverHand ? TILE_BACK : tile}.png`}
+                            alt={coverHand ? "牌背" : tile}
                             style={{
-                                width: "5%",
-                                maxWidth: "42px",
+                                width: `${tileSizes.handTileSize}px`,
+                                maxWidth: `${tileSizes.handTileSize}px`,
                                 height: "auto",
-                                borderRadius: "4px",
+                                borderRadius: "5px",
                                 boxSizing: "border-box",
-                                border: i === lastDiscardIndex ? "2px solid #dc3545" : "2px solid transparent",
+                                border: index === lastDiscardIndex ? "2px solid #dc3545" : "2px solid transparent",
                             }}
                         />
                     ))}
@@ -702,22 +886,34 @@ function EfficiencyTrainer() {
             )}
 
             <div style={{ marginTop: "10px", display: "flex", gap: "15px", flexWrap: "wrap", justifyContent: "center" }}>
-                <label>
-                    <input type="checkbox" checked={isDiscard} onChange={(e) => setIsDiscard(e.target.checked)} />
-                    顯示切牌
-                </label>
-                <label>
-                    <input type="checkbox" checked={isShanten} onChange={(e) => setIsShanten(e.target.checked)} />
-                    顯示向聽數
-                </label>
-                <label>
-                    <input type="checkbox" checked={isCalculatedList} onChange={(e) => setIsCalculatingList(e.target.checked)} />
-                    顯示進張（聽牌）列表
-                </label>
-                <label>
-                    <input type="checkbox" checked={showPreviousHand} onChange={(e) => setShowPreviousHand(e.target.checked)} />
-                    顯示切牌前
-                </label>
+                <button type="button" onClick={() => setIsDiscard(!isDiscard)} style={toggleStyle(isDiscard, tileSizes.efficiencyButtonSize)}>
+                    顯示切牌：{isDiscard ? "開" : "關"}
+                </button>
+                <button type="button" onClick={() => setIsShanten(!isShanten)} style={toggleStyle(isShanten, tileSizes.efficiencyButtonSize)}>
+                    顯示向聽數：{isShanten ? "開" : "關"}
+                </button>
+                <button type="button" onClick={() => setIsCalculatingList(!isCalculatedList)} style={toggleStyle(isCalculatedList, tileSizes.efficiencyButtonSize)}>
+                    顯示進張（聽牌）列表：{isCalculatedList ? "開" : "關"}
+                </button>
+                <button type="button" onClick={() => setShowPreviousHand(!showPreviousHand)} style={toggleStyle(showPreviousHand, tileSizes.efficiencyButtonSize)}>
+                    顯示切牌前：{showPreviousHand ? "開" : "關"}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setPreviousAutoSort(!previousAutoSort)}
+                    style={toggleStyle(previousAutoSort, tileSizes.efficiencyButtonSize)}
+                    title="只控制上方「切牌前」手牌的排列，不影響目前手牌的自動理牌"
+                >
+                    切牌前理牌：{previousAutoSort ? "開" : "關"}
+                </button>
+                <button
+                    type="button"
+                    onClick={toggleCoverHand}
+                    style={toggleStyle(coverHand, tileSizes.efficiencyButtonSize)}
+                    title="開啟後手牌只顯示牌背（剛摸的牌例外），並自動關閉自動理牌；下方可用全部牌種點選切牌"
+                >
+                    蓋牌：{coverHand ? "開" : "關"}
+                </button>
             </div>
 
             <div
@@ -729,36 +925,13 @@ function EfficiencyTrainer() {
                     justifyContent: "center",
                 }}
             >
-                <button
-                    onClick={resetGame}
-                    style={{
-                        padding: "7px 15px",
-                        fontSize: "20px",
-                        fontWeight: "bold",
-                        backgroundColor: "#007BFF",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                    }}
-                >
+                <button onClick={resetGame} style={actionButtonStyle(tileSizes.efficiencyButtonSize, "#007BFF")}>
                     新的手牌
                 </button>
                 <button
                     onClick={toggleAutoSort}
                     title="關閉後，手牌會保留你目前的排列順序，新摸的牌仍接在最右邊"
-                    style={{
-                        padding: "7px 15px",
-                        fontSize: "20px",
-                        fontWeight: "bold",
-                        backgroundColor: autoSort ? "#007BFF" : "#777777",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                    }}
+                    style={toggleStyle(autoSort, tileSizes.efficiencyButtonSize)}
                 >
                     {autoSort ? "自動理牌：開" : "自動理牌：關"}
                 </button>
@@ -766,17 +939,7 @@ function EfficiencyTrainer() {
                     onClick={undoLastDiscard}
                     disabled={history.length === 0}
                     title="回到上一次切牌前的狀態，可連續回退"
-                    style={{
-                        padding: "7px 15px",
-                        fontSize: "20px",
-                        fontWeight: "bold",
-                        backgroundColor: history.length === 0 ? "#cccccc" : "#dc3545",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: history.length === 0 ? "not-allowed" : "pointer",
-                        transition: "all 0.3s ease",
-                    }}
+                    style={actionButtonStyle(tileSizes.efficiencyButtonSize, history.length === 0 ? "#cccccc" : "#dc3545", history.length === 0)}
                 >
                     反悔{history.length > 0 ? `（${history.length}）` : ""}
                 </button>
@@ -790,6 +953,18 @@ function EfficiencyTrainer() {
                 >
                     本局反悔：{undoCount} 次
                 </span>
+                {coverHand && (
+                    <span
+                        style={{
+                            alignSelf: "center",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            color: coverErrorCount > 0 ? "#dc3545" : "#999999",
+                        }}
+                    >
+                        本局錯誤：{coverErrorCount} 次
+                    </span>
+                )}
             </div>
 
             <div

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { loadSettings } from "../tools/settings";
 
 // 將手牌轉換為 tiles34Arr 格式
 const convertToTiles34Arr = (handTiles) => {
@@ -138,6 +139,18 @@ function EfficiencyTrainer() {
     const [improvementResults, setImprovementResults] = useState({});
     const [isCalculating, setIsCalculating] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
+    // 牌面大小：讀設定頁「進張數計算 UI」
+    const [tileSize, setTileSize] = useState(() => loadSettings().shantenTileSize);
+
+    useEffect(() => {
+        const sync = () => setTileSize(loadSettings().shantenTileSize);
+        window.addEventListener("storage", sync);
+        window.addEventListener("focus", sync);
+        return () => {
+            window.removeEventListener("storage", sync);
+            window.removeEventListener("focus", sync);
+        };
+    }, []);
 
     const handleInputChange = (e) => {
         const input = e.target.value;
@@ -304,8 +317,8 @@ function EfficiencyTrainer() {
                         src={`${process.env.PUBLIC_URL}/images/${tile}.png`}
                         alt={tile}
                         style={{
-                            width: "7%",
-                            maxWidth: "50px",
+                            width: `${tileSize}px`,
+                            maxWidth: `${tileSize}px`,
                             height: "auto",
                             borderRadius: "5px",
                             transition: "all 0.2s ease",
