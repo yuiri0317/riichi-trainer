@@ -5,13 +5,18 @@
     "description": "立直麻將練習工具（離線桌面版）",
     "author": "richi",
     "main": "electron/main.js",
-    "dependencies": {
+    "devDependencies": {
+        "@capacitor/android": "^7.0.0",
+        "@capacitor/cli": "^7.0.0",
         "@capacitor/core": "^7.0.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-router-dom": "^7.1.5",
         "react-scripts": "5.0.1",
-        "web-vitals": "^4.2.4"
+        "web-vitals": "^4.2.4",
+        "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+        "electron": "^33.0.0",
+        "electron-builder": "^25.0.0"
     },
     "scripts": {
         "start": "react-scripts start",
@@ -71,12 +76,5 @@
             "last 1 firefox version",
             "last 1 safari version"
         ]
-    },
-    "devDependencies": {
-        "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-        "@capacitor/android": "^7.0.0",
-        "@capacitor/cli": "^7.0.0",
-        "electron": "^33.0.0",
-        "electron-builder": "^25.0.0"
     }
 }
