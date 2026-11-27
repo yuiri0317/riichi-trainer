@@ -59,8 +59,40 @@ npm run build      # 產出 build/
 > **所有 npm 依賴都放在 `devDependencies`，`dependencies` 是空的。**
 > React 那套由 webpack 編譯進 `build/`，Electron 主程序只用 Node 內建模組，
 > 所以執行時不需要任何 `node_modules`。若把建置期依賴放回 `dependencies`，
-> electron-builder 會把整包工具鏈塞進 `app.asar`（實測 6 MB → 155 MB），
+> electron-builder 會把整包工具鏈塞進 `app.asar`（實測 4.3 MB → 155 MB），
 > 安裝檔也會從 82 MB 漲回 100 MB。
+
+## 正式建置不含 source map
+
+`.env.production` 設了 `GENERATE_SOURCEMAP=false`，`deploy-pages.yml` 也另外指定一次。
+原因：`.map` 會公開完整原始碼，而且會被一起打包進 `app.asar` 與 APK。
+需要除錯時用 `npm start`（開發模式本來就有 map）。
+
+## Android 簽名
+
+發布版 APK 用自建 keystore 簽名：
+
+| 項目 | 位置 |
+|---|---|
+| keystore | `D:\richi\android-keystore\riichi-release.jks` |
+| 密碼 | `D:\richi\android-keystore\keystore-password.txt` |
+| Gradle 設定 | `android/keystore.properties`（`android/` 不進版控） |
+
+指紋（SHA-256）：`41f8c91aac028d51c9ff4ad2fa8066ee96319a414e60c9bf53f4c94ad0cc4ef2`
+
+```powershell
+# 建置（JAVA_HOME 需指向 JDK 21）
+cd android
+.\gradlew.bat assembleRelease --no-daemon
+# 產物：android\app\build\outputs\apk\release\app-release.apk
+```
+
+> ⚠ **keystore 與密碼一定要備份。** 遺失後就永遠無法用同一簽章更新 App，
+> 使用者只能先卸載再重裝。`android/` 是 `cap add` 生成的、不進版控，
+> 換機器重建 Android 專案後要重新放一次 `keystore.properties`。
+>
+> 若 `keystore.properties` 不存在，Gradle 會退回「不簽名」繼續建置，
+> 所以 `assembleDebug` 不受影響。
 
 
 ## PWA
